@@ -41,7 +41,13 @@ export default function Home() {
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Le serveur a mis trop de temps à répondre (timeout Vercel). Réessayez ou utilisez la version locale.');
+      }
       if (!res.ok) throw new Error(data.error || 'Analyse failed');
 
       setResult(data);
