@@ -5,6 +5,22 @@ import ViewportColumn from '@/components/ViewportColumn';
 import ReportView from '@/components/ReportView';
 import { AnalysisResult } from '@/types';
 
+function compressImage(base64: string, maxWidth: number = 1200, quality: number = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxWidth / img.width, 1);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = base64;
+  });
+}
+
 export default function Home() {
   const [figmaD, setFigmaD] = useState<string | null>(null);
   const [devD, setDevD] = useState<string | null>(null);
@@ -27,12 +43,12 @@ export default function Home() {
     try {
       const body: Record<string, string> = {};
       if (hasDesktopPair) {
-        body.figmaD = figmaD!;
-        body.shotD = devD!;
+        body.figmaD = await compressImage(figmaD!);
+        body.shotD = await compressImage(devD!);
       }
       if (hasMobilePair) {
-        body.figmaM = figmaM!;
-        body.shotM = devM!;
+        body.figmaM = await compressImage(figmaM!);
+        body.shotM = await compressImage(devM!);
       }
 
       const res = await fetch('/api/analyze', {
